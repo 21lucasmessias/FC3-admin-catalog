@@ -1,3 +1,4 @@
+import { Uuid } from 'src/shared/domain/value-objects/uuid.vo';
 import { Category, CategoryConstructorProps, CategoryCreateCommand } from './../category.entity';
 
 describe('Category Entity', () => {
@@ -28,7 +29,7 @@ describe('Category Entity', () => {
         expect(category.description).toBe(categoryCreateCommand.description);
         expect(category.isActive).toBe(categoryCreateCommand.isActive);
         expect(category.createdAt).toBeInstanceOf(Date);
-        expect(category.categoryId).toBeUndefined();
+        expect(category.categoryId).toBeDefined();
       });
     });
   });
@@ -38,7 +39,7 @@ describe('Category Entity', () => {
 
     beforeEach(() => {
       categoryConstructorProps = {
-        categoryId: '123',
+        categoryId: new Uuid(),
         name: 'Category Name',
         description: 'Category Description',
         isActive: true,
