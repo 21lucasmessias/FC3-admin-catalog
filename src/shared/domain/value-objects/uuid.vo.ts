@@ -1,4 +1,4 @@
-import { v4 as uuid, validate } from 'uuid';
+import { v4 as uuid, validate as uuidValidate } from 'uuid';
 import { ValueObject } from '../value-object';
 
 export class Uuid extends ValueObject {
@@ -13,7 +13,7 @@ export class Uuid extends ValueObject {
   }
 
   private validate() {
-    const isValid = validate(this.id);
+    const isValid = uuidValidate(this.id);
 
     if (!isValid) {
       throw new InvalidUuidError();
