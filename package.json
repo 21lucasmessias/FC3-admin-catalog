@@ -2,7 +2,6 @@
   "name": "fc3-admin-catalog",
   "version": "1.0.0",
   "description": "FC3",
-  "main": ".eslintrc.js",
   "scripts": {
     "start": "nest start",
     "test": "jest",
