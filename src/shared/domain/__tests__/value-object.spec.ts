@@ -7,10 +7,7 @@ class StringValueObject extends ValueObject {
 }
 
 class ComplexValueObject extends ValueObject {
-  constructor(
-    readonly value1: string,
-    readonly value2: number,
-  ) {
+  constructor(readonly value1: string, readonly value2: number) {
     super();
   }
 }
@@ -137,7 +134,7 @@ describe('ValueObject', () => {
       let result: boolean;
 
       beforeEach(() => {
-        result = valueObject.equals(null);
+        result = valueObject.equals(null as any);
       });
 
       it('then should return false', () => {
@@ -157,7 +154,7 @@ describe('ValueObject', () => {
       let result: boolean;
 
       beforeEach(() => {
-        result = valueObject.equals(undefined);
+        result = valueObject.equals(undefined as any);
       });
 
       it('then should return false', () => {
