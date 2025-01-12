@@ -1,3 +1,4 @@
+import { Entity } from 'src/shared/domain/entity';
 import { EntityValidationError } from 'src/shared/domain/validators/validation.error';
 import { Uuid } from 'src/shared/domain/value-objects/uuid.vo';
 import { CategoryValidatorFactory } from './category.validator';
@@ -16,7 +17,7 @@ export type CategoryCreateCommand = {
   isActive?: boolean;
 };
 
-export class Category {
+export class Category extends Entity {
   categoryId: Uuid;
   name: string;
   description?: string | null;
@@ -25,6 +26,7 @@ export class Category {
 
   //used by db rehydration
   constructor(props: CategoryConstructorProps) {
+    super();
     this.categoryId = props.categoryId ?? new Uuid();
     this.name = props.name;
     this.description = props.description ?? null;
@@ -50,13 +52,17 @@ export class Category {
     this.isActive = false;
   }
 
+  get entityId(): Uuid {
+    return this.categoryId;
+  }
+
   toJson() {
     return {
       categoryId: this.categoryId.id,
       name: this.name,
       description: this.description,
       isActive: this.isActive,
-      createdAt: this.createdAt,
+      createdAt: this.createdAt?.toISOString(),
     };
   }
 

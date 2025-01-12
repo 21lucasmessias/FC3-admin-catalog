@@ -41,6 +41,28 @@ describe('Category Entity', () => {
         expect(category.createdAt).toBeInstanceOf(Date);
         expect(category.categoryId).toBeDefined();
       });
+
+      test('should have an entityId', () => {
+        expect(category.entityId).toBeDefined();
+      });
+
+      describe('when toJson is called', () => {
+        let json: any;
+
+        beforeEach(() => {
+          json = category.toJson();
+        });
+
+        test('then should return an object with the correct attributes', () => {
+          expect(json).toEqual({
+            categoryId: category.categoryId.id,
+            name: 'Category Name',
+            description: 'Category Description',
+            isActive: true,
+            createdAt: category.createdAt!.toISOString(),
+          });
+        });
+      });
     });
   });
 
@@ -79,73 +101,97 @@ describe('Category Entity', () => {
       test('then should not call validate', () => {
         expect(categoryValidatorSpy).toHaveBeenCalledTimes(0);
       });
+
+      test('should have an entityId', () => {
+        expect(category.entityId).toBeDefined();
+      });
+
+      describe('when toJson is called', () => {
+        let json: any;
+
+        beforeEach(() => {
+          json = category.toJson();
+        });
+
+        test('then should return an object with the correct attributes', () => {
+          expect(json).toEqual({
+            categoryId: category.categoryId.id,
+            name: 'Category Name',
+            description: 'Category Description',
+            isActive: true,
+            createdAt: category.createdAt!.toISOString(),
+          });
+        });
+      });
     });
   });
 
-  describe('given a Category instance', () => {
-    let category: Category;
+  describe('methods', () => {
+    describe('given a Category instance', () => {
+      let category: Category;
 
-    beforeEach(() => {
-      category = Category.create({
-        name: 'Category Name',
-        description: 'Category Description',
-        isActive: true,
-      });
-    });
-
-    describe('when changeName is called', () => {
       beforeEach(() => {
-        category.changeName('New Category Name');
+        category = Category.create({
+          name: 'Category Name',
+          description: 'Category Description',
+          isActive: true,
+        });
       });
 
-      test('then should have the new name', () => {
-        expect(category.name).toBe('New Category Name');
+      describe('when changeName is called', () => {
+        beforeEach(() => {
+          category.changeName('New Category Name');
+        });
+
+        test('then should have the new name', () => {
+          expect(category.name).toBe('New Category Name');
+        });
+
+        test('then should call validate', () => {
+          expect(categoryValidatorSpy).toHaveBeenCalledTimes(2);
+        });
       });
 
-      test('then should call validate', () => {
-        expect(categoryValidatorSpy).toHaveBeenCalledTimes(2);
-      });
-    });
+      describe('when changeDescription is called', () => {
+        beforeEach(() => {
+          category.changeDescription('New Category Description');
+        });
 
-    describe('when changeDescription is called', () => {
-      beforeEach(() => {
-        category.changeDescription('New Category Description');
-      });
+        test('then should have the new description', () => {
+          expect(category.description).toBe('New Category Description');
+        });
 
-      test('then should have the new description', () => {
-        expect(category.description).toBe('New Category Description');
-      });
-
-      test('then should call validate', () => {
-        expect(categoryValidatorSpy).toHaveBeenCalledTimes(2);
-      });
-    });
-
-    describe('when activate is called', () => {
-      beforeEach(() => {
-        category.activate();
+        test('then should call validate', () => {
+          expect(categoryValidatorSpy).toHaveBeenCalledTimes(2);
+        });
       });
 
-      test('then should be active', () => {
-        expect(category.isActive).toBe(true);
+      describe('when activate is called', () => {
+        beforeEach(() => {
+          category.activate();
+        });
+
+        test('then should be active', () => {
+          expect(category.isActive).toBe(true);
+        });
+
+        test('then should call validate', () => {
+          expect(categoryValidatorSpy).toHaveBeenCalledTimes(1);
+        });
       });
 
-      test('then should call validate', () => {
-        expect(categoryValidatorSpy).toHaveBeenCalledTimes(1);
-      });
-    });
+      describe('when deactivate is called', () => {
+        beforeEach(() => {
+          category.deactivate();
+        });
 
-    describe('when deactivate is called', () => {
-      beforeEach(() => {
-        category.deactivate();
-      });
+        test('then should be inactive', () => {
+          expect(category.isActive).toBe(false);
+        });
 
-      test('then should be inactive', () => {
-        expect(category.isActive).toBe(false);
-      });
-
-      test('then should call validate', () => {
-        expect(categoryValidatorSpy).toHaveBeenCalledTimes(1);
+        test('then should call validate', () => {
+          expect(categoryValidatorSpy).toHaveBeenCalledTimes(1);
+        });
       });
     });
   });
