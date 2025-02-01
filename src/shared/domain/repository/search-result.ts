@@ -21,7 +21,7 @@ export class SearchResult<E extends Entity = Entity> extends ValueObject {
     this.total = props.total;
     this.current_page = props.current_page;
     this.per_page = props.per_page;
-    this.last_page = Math.ceil(this.total / this.per_page);
+    this.last_page = Math.ceil(this.total / this.per_page) || 1;
   }
 
   toJSON(forceEntity = false) {
