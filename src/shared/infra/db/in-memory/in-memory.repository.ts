@@ -4,7 +4,7 @@ import { IRepository } from 'src/shared/domain/repository/repository.interface';
 import { Uuid } from 'src/shared/domain/value-objects/uuid.vo';
 
 export abstract class InMemoryRepository<E extends Entity, EntityId extends Uuid> implements IRepository<E, EntityId> {
-  private entities: Map<string, E> = new Map();
+  protected entities: Map<string, E> = new Map();
   private deletedEntities: Map<string, E> = new Map();
 
   async insert(entity: E): Promise<E> {
