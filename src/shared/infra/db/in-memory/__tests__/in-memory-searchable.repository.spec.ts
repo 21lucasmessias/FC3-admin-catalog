@@ -340,11 +340,7 @@ describe('InMemorySearchableRepository', () => {
             expect(spyApplyPaginate).toHaveBeenCalled();
 
             expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
-            expect(spyApplySort).toHaveBeenCalledWith(
-              [listEntities[0], listEntities[2], listEntities[1]],
-              'name',
-              'asc',
-            );
+            expect(spyApplySort).toHaveBeenCalledWith(listEntities, 'name', 'asc');
             expect(spyApplyPaginate).toHaveBeenCalledWith([listEntities[0], listEntities[2], listEntities[1]], 1, 15);
           });
         });
@@ -396,11 +392,7 @@ describe('InMemorySearchableRepository', () => {
             expect(spyApplyPaginate).toHaveBeenCalled();
 
             expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
-            expect(spyApplySort).toHaveBeenCalledWith(
-              [listEntities[1], listEntities[2], listEntities[0]],
-              'name',
-              'desc',
-            );
+            expect(spyApplySort).toHaveBeenCalledWith(listEntities, 'name', 'desc');
             expect(spyApplyPaginate).toHaveBeenCalledWith([listEntities[1], listEntities[2], listEntities[0]], 1, 15);
           });
         });

@@ -5,11 +5,11 @@ import { StubEntity } from './entity.stub';
 export class StubInMemorySearchableRepository extends InMemorySearchableRepository<StubEntity, Uuid> {
   sortableFields: string[] = ['name'];
 
-  protected applyFilter(entities: Map<string, StubEntity>, filter: string | null): Promise<StubEntity[]> {
+  protected async applyFilter(entities: Map<string, StubEntity>, filter: string | null): Promise<StubEntity[]> {
     const items = Array.from(entities.values());
 
     if (!filter) {
-      return Promise.resolve(items);
+      return items;
     }
 
     const lowerCaseFilter = filter.toLowerCase();
@@ -17,7 +17,7 @@ export class StubInMemorySearchableRepository extends InMemorySearchableReposito
       return item.name.toLowerCase().includes(lowerCaseFilter) || item.price.toString() === filter;
     });
 
-    return Promise.resolve(filteredItems);
+    return filteredItems;
   }
 
   getEntity(): new (...args: any[]) => StubEntity {

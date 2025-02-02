@@ -31,9 +31,11 @@ export abstract class InMemorySearchableRepository<E extends Entity, EntityId ex
       return entities;
     }
 
+    const entitiesCopy = [...entities];
+
     const getter = (entity: E, sort: string) => entity[sort];
 
-    return entities.sort((a, b) => {
+    return entitiesCopy.sort((a, b) => {
       const valueA = getter(a, sort);
       const valueB = getter(b, sort);
 
