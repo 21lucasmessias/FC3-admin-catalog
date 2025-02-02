@@ -26,17 +26,12 @@ export abstract class InMemorySearchableRepository<E extends Entity, EntityId ex
 
   protected abstract applyFilter(entities: Map<string, E>, filter: Filter | null): Promise<E[]>;
 
-  protected applySort(
-    entities: E[],
-    sort: string | null,
-    sortDir: SortDirection | null,
-    customGetter?: (entity: E, sort: string) => any,
-  ): E[] {
+  protected applySort(entities: E[], sort: string | null, sortDir: SortDirection | null): E[] {
     if (!sort || !this.sortableFields.includes(sort)) {
       return entities;
     }
 
-    const getter = customGetter || ((entity: E, sort: string) => entity[sort]);
+    const getter = (entity: E, sort: string) => entity[sort];
 
     return entities.sort((a, b) => {
       const valueA = getter(a, sort);

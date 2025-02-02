@@ -205,32 +205,6 @@ describe('InMemorySearchableRepository', () => {
             expect(sortedItems[2].name).toBe('Entity 1');
           });
         });
-
-        describe('when applySort is called with valid sort and customGetter', () => {
-          let sort = 'name';
-          let sortDir: SortDirection | null;
-          let customGetter = (entity: StubEntity, sort: string) => entity.price;
-
-          let sortSpy: jest.SpyInstance;
-
-          let sortedItems: StubEntity[];
-
-          beforeEach(async () => {
-            sortDir = 'asc';
-
-            sortSpy = jest.spyOn(Array.prototype, 'sort');
-
-            sortedItems = repository['applySort'](Array.from(entities.values()), sort, sortDir, customGetter);
-          });
-
-          it('then it should return sorted entities', () => {
-            expect(sortedItems).toHaveLength(3);
-            expect(sortSpy).toHaveBeenCalled();
-            expect(sortedItems[0].name).toBe('Entity 1');
-            expect(sortedItems[1].name).toBe('Entity 2');
-            expect(sortedItems[2].name).toBe('Entity 3');
-          });
-        });
       });
     });
   });
@@ -276,10 +250,18 @@ describe('InMemorySearchableRepository', () => {
         let entities: Map<string, StubEntity>;
         let listEntities: StubEntity[];
 
+        let spyApplyFilter: jest.SpyInstance;
+        let spyApplySort: jest.SpyInstance;
+        let spyApplyPaginate: jest.SpyInstance;
+
         beforeEach(() => {
           repository.insert(new StubEntity({ name: 'Entity 1', price: 100 }));
           repository.insert(new StubEntity({ name: 'Entity 3', price: 300 }));
           repository.insert(new StubEntity({ name: 'Entity 2', price: 200 }));
+
+          spyApplyFilter = jest.spyOn(repository, 'applyFilter' as any);
+          spyApplySort = jest.spyOn(repository, 'applySort' as any);
+          spyApplyPaginate = jest.spyOn(repository, 'applyPaginate' as any);
 
           entities = repository['entities'];
           listEntities = Array.from(entities.values());
@@ -300,6 +282,14 @@ describe('InMemorySearchableRepository', () => {
             expect(searchResult.total).toBe(3);
             expect(searchResult.current_page).toBe(1);
             expect(searchResult.per_page).toBe(15);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
+            expect(spyApplySort).toHaveBeenCalledWith(listEntities, null, null);
+            expect(spyApplyPaginate).toHaveBeenCalledWith(listEntities, 1, 15);
           });
         });
 
@@ -318,6 +308,14 @@ describe('InMemorySearchableRepository', () => {
             expect(searchResult.total).toBe(1);
             expect(searchResult.current_page).toBe(1);
             expect(searchResult.per_page).toBe(15);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, 'Entity 1');
+            expect(spyApplySort).toHaveBeenCalledWith([listEntities[0]], null, null);
+            expect(spyApplyPaginate).toHaveBeenCalledWith([listEntities[0]], 1, 15);
           });
         });
 
@@ -336,10 +334,48 @@ describe('InMemorySearchableRepository', () => {
             expect(searchResult.total).toBe(3);
             expect(searchResult.current_page).toBe(1);
             expect(searchResult.per_page).toBe(15);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
+            expect(spyApplySort).toHaveBeenCalledWith(
+              [listEntities[0], listEntities[2], listEntities[1]],
+              'name',
+              'asc',
+            );
+            expect(spyApplyPaginate).toHaveBeenCalledWith([listEntities[0], listEntities[2], listEntities[1]], 1, 15);
           });
         });
 
-        describe('when search params has a sort and sort_dir desc', () => {
+        describe('when search params has a sort_dir desc', () => {
+          let searchInput: SearchParams;
+          let searchResult: any;
+
+          beforeEach(async () => {
+            searchInput = new SearchParams({ sort_dir: 'desc' });
+
+            searchResult = await repository.search(searchInput);
+          });
+
+          it('then it should ignore sort_dir and return the original entities', () => {
+            expect(searchResult.items).toEqual([listEntities[0], listEntities[1], listEntities[2]]);
+            expect(searchResult.total).toBe(3);
+            expect(searchResult.current_page).toBe(1);
+            expect(searchResult.per_page).toBe(15);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
+            expect(spyApplySort).toHaveBeenCalledWith(listEntities, null, null);
+            expect(spyApplyPaginate).toHaveBeenCalledWith(listEntities, 1, 15);
+          });
+        });
+
+        describe('when search params has a sort and sort_dir', () => {
           let searchInput: SearchParams;
           let searchResult: any;
 
@@ -354,60 +390,70 @@ describe('InMemorySearchableRepository', () => {
             expect(searchResult.total).toBe(3);
             expect(searchResult.current_page).toBe(1);
             expect(searchResult.per_page).toBe(15);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
+            expect(spyApplySort).toHaveBeenCalledWith(
+              [listEntities[1], listEntities[2], listEntities[0]],
+              'name',
+              'desc',
+            );
+            expect(spyApplyPaginate).toHaveBeenCalledWith([listEntities[1], listEntities[2], listEntities[0]], 1, 15);
           });
         });
 
-        describe('when search params has a sort and customGetter', () => {
+        describe('when search params has a page', () => {
           let searchInput: SearchParams;
           let searchResult: any;
 
           beforeEach(async () => {
-            searchInput = new SearchParams({ sort: 'name', sort_dir: 'asc' });
-
-            searchResult = await repository.search(searchInput);
-          });
-
-          it('then it should return the sorted entities', () => {
-            expect(searchResult.items).toEqual([listEntities[0], listEntities[2], listEntities[1]]);
-            expect(searchResult.total).toBe(3);
-            expect(searchResult.current_page).toBe(1);
-            expect(searchResult.per_page).toBe(15);
-          });
-        });
-
-        describe('when search params has a page and per_page', () => {
-          let searchInput: SearchParams;
-          let searchResult: any;
-
-          beforeEach(async () => {
-            searchInput = new SearchParams({ page: 2, per_page: 1 });
+            searchInput = new SearchParams({ page: 1 });
 
             searchResult = await repository.search(searchInput);
           });
 
           it('then it should return the paginated entities', () => {
-            expect(searchResult.items).toEqual([listEntities[1]]);
+            expect(searchResult.items).toEqual([listEntities[0], listEntities[1], listEntities[2]]);
             expect(searchResult.total).toBe(3);
-            expect(searchResult.current_page).toBe(2);
-            expect(searchResult.per_page).toBe(1);
+            expect(searchResult.current_page).toBe(1);
+            expect(searchResult.per_page).toBe(15);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
+            expect(spyApplySort).toHaveBeenCalledWith(listEntities, null, null);
+            expect(spyApplyPaginate).toHaveBeenCalledWith(listEntities, 1, 15);
           });
         });
 
-        describe('when search params has a page greater than total pages', () => {
+        describe('when search params has per_page', () => {
           let searchInput: SearchParams;
           let searchResult: any;
 
           beforeEach(async () => {
-            searchInput = new SearchParams({ page: 2, per_page: 3 });
+            searchInput = new SearchParams({ per_page: 1 });
 
             searchResult = await repository.search(searchInput);
           });
 
-          it('then it should return empty array', () => {
-            expect(searchResult.items).toEqual([]);
+          it('then it should return the paginated entities', () => {
+            expect(searchResult.items).toEqual([listEntities[0]]);
             expect(searchResult.total).toBe(3);
-            expect(searchResult.current_page).toBe(2);
-            expect(searchResult.per_page).toBe(3);
+            expect(searchResult.current_page).toBe(1);
+            expect(searchResult.per_page).toBe(1);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, null);
+            expect(spyApplySort).toHaveBeenCalledWith(listEntities, null, null);
+            expect(spyApplyPaginate).toHaveBeenCalledWith(listEntities, 1, 1);
           });
         });
 
@@ -426,6 +472,14 @@ describe('InMemorySearchableRepository', () => {
             expect(searchResult.total).toBe(1);
             expect(searchResult.current_page).toBe(1);
             expect(searchResult.per_page).toBe(1);
+
+            expect(spyApplyFilter).toHaveBeenCalled();
+            expect(spyApplySort).toHaveBeenCalled();
+            expect(spyApplyPaginate).toHaveBeenCalled();
+
+            expect(spyApplyFilter).toHaveBeenCalledWith(entities, 'Entity 1');
+            expect(spyApplySort).toHaveBeenCalledWith([listEntities[0]], 'name', 'asc');
+            expect(spyApplyPaginate).toHaveBeenCalledWith([listEntities[0]], 1, 1);
           });
         });
       });
