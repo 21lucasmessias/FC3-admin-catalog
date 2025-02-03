@@ -1,6 +1,7 @@
 import { Entity } from 'src/shared/domain/entity';
 import { EntityValidationError } from 'src/shared/domain/validators/validation.error';
 import { Uuid } from 'src/shared/domain/value-objects/uuid.vo';
+import { CategoryFakeBuilder } from './category-fake.builder';
 import { CategoryValidatorFactory } from './category.validator';
 
 export type CategoryConstructorProps = {
@@ -22,7 +23,7 @@ export class Category extends Entity {
   name: string;
   description?: string | null;
   isActive?: boolean;
-  createdAt?: Date;
+  createdAt: Date;
 
   //used by db rehydration
   constructor(props: CategoryConstructorProps) {
@@ -81,5 +82,9 @@ export class Category extends Entity {
     if (!isValid) {
       throw new EntityValidationError(validator.errors!);
     }
+  }
+
+  static fake() {
+    return CategoryFakeBuilder;
   }
 }
