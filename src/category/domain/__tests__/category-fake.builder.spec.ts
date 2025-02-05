@@ -1,262 +1,650 @@
-import { Chance } from 'chance';
+import { ChanceRandom } from 'src/shared/domain/utils/chance.random';
 import { Uuid } from 'src/shared/domain/value-objects/uuid.vo';
 import { CategoryFakeBuilder } from '../category-fake.builder';
 
 describe('CategoryFakerBuilder Unit Tests', () => {
-  describe('categoryId prop', () => {
-    const faker = CategoryFakeBuilder.aCategory();
+  describe('categoryId', () => {
+    describe('given a fake category', () => {
+      let faker: CategoryFakeBuilder;
 
-    test('should throw error when any with methods has called', () => {
-      expect(() => faker.categoryId).toThrowError(
-        new Error("Property categoryId not have a factory, use 'with' methods"),
-      );
-    });
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.aCategory();
+      });
 
-    test('should be undefined', () => {
-      expect(faker['_categoryId']).toBeUndefined();
-    });
+      describe('when getValue is called', () => {
+        test('then should throw error', () => {
+          expect(() => faker.categoryId).toThrowError(
+            new Error("Property categoryId not have a factory, use 'with' methods"),
+          );
+        });
+      });
 
-    test('withCategoryId', () => {
-      const categoryId = new Uuid();
-      const $this = faker.withCategoryId(categoryId);
-      expect($this).toBeInstanceOf(CategoryFakeBuilder);
-      expect(faker['_categoryId']).toBe(categoryId);
+      describe('when category is not set', () => {
+        test('then should be undefined', () => {
+          expect(faker['_categoryId']).toBeUndefined();
+        });
+      });
 
-      faker.withCategoryId(() => categoryId);
-      //@ts-expect-error _categoryId is a callable
-      expect(faker['_categoryId']()).toBe(categoryId);
+      describe('when withCategoryId is called', () => {
+        let categoryId: Uuid;
 
-      expect(faker.categoryId).toBe(categoryId);
-    });
+        beforeEach(() => {
+          categoryId = new Uuid();
+          faker.withCategoryId(categoryId);
+        });
 
-    //TODO - melhorar este nome
-    test('should pass index to categoryId factory', () => {
-      let mockFactory = jest.fn(() => new Uuid());
-      faker.withCategoryId(mockFactory);
-      faker.build();
-      expect(mockFactory).toHaveBeenCalledTimes(1);
+        test('then should set categoryId', () => {
+          expect(faker['_categoryId']).toBe(categoryId);
+          expect(faker.categoryId).toBe(categoryId);
+        });
 
-      const categoryId = new Uuid();
-      mockFactory = jest.fn(() => categoryId);
-      const fakerMany = CategoryFakeBuilder.theCategories(2);
-      fakerMany.withCategoryId(mockFactory);
-      fakerMany.build();
+        describe('and withCategoryId is called with a factory', () => {
+          beforeEach(() => {
+            faker.withCategoryId(() => categoryId);
+          });
 
-      expect(mockFactory).toHaveBeenCalledTimes(2);
-      expect(fakerMany.build()[0].categoryId).toBe(categoryId);
-      expect(fakerMany.build()[1].categoryId).toBe(categoryId);
-    });
-  });
+          test('then should set categoryId', () => {
+            expect((faker['_categoryId'] as () => any)()).toBe(categoryId);
+          });
+        });
+      });
 
-  describe('name prop', () => {
-    const faker = CategoryFakeBuilder.aCategory();
-    test('should be a function', () => {
-      expect(typeof faker['_name']).toBe('function');
-    });
+      describe('and a factory is set to return a fixed uuid', () => {
+        let categoryId: Uuid;
+        let mockFactory: jest.Mock;
 
-    test('should call the word method', () => {
-      const chance = Chance();
-      const spyWordMethod = jest.spyOn(chance, 'word');
-      faker['chance'] = chance;
-      faker.build();
+        beforeEach(() => {
+          categoryId = new Uuid();
+          mockFactory = jest.fn(() => categoryId);
+        });
 
-      expect(spyWordMethod).toHaveBeenCalled();
-    });
+        describe('when withCategoryId is called', () => {
+          beforeEach(() => {
+            faker.withCategoryId(mockFactory);
+          });
 
-    test('withName', () => {
-      const $this = faker.withName('test name');
-      expect($this).toBeInstanceOf(CategoryFakeBuilder);
-      expect(faker['_name']).toBe('test name');
+          describe('when build is called', () => {
+            beforeEach(() => {
+              faker.build();
+            });
 
-      faker.withName(() => 'test name');
-      //@ts-expect-error name is callable
-      expect(faker['_name']()).toBe('test name');
+            test('then should call the factory', () => {
+              expect(mockFactory).toHaveBeenCalledTimes(1);
+            });
+          });
+        });
+      });
 
-      expect(faker.name).toBe('test name');
-    });
+      describe('and many categories are set to use a fixed uuid', () => {
+        let fakerMany: CategoryFakeBuilder;
 
-    test('should pass index to name factory', () => {
-      faker.withName((index) => `test name ${index}`);
-      const category = faker.build();
-      expect(category.name).toBe(`test name 0`);
+        beforeEach(() => {
+          fakerMany = CategoryFakeBuilder.theCategories(2);
+        });
 
-      const fakerMany = CategoryFakeBuilder.theCategories(2);
-      fakerMany.withName((index) => `test name ${index}`);
-      const categories = fakerMany.build();
+        describe('when withCategoryId is called', () => {
+          let categoryId: Uuid;
 
-      expect(categories[0].name).toBe(`test name 0`);
-      expect(categories[1].name).toBe(`test name 1`);
-    });
+          beforeEach(() => {
+            categoryId = new Uuid();
+            fakerMany.withCategoryId(() => categoryId);
+          });
 
-    test('invalid too long case', () => {
-      const $this = faker.withInvalidNameTooLong();
-      expect($this).toBeInstanceOf(CategoryFakeBuilder);
-      expect(faker['_name'].length).toBe(256);
-
-      const tooLong = 'a'.repeat(256);
-      faker.withInvalidNameTooLong(tooLong);
-      expect(faker['_name'].length).toBe(256);
-      expect(faker['_name']).toBe(tooLong);
-    });
-  });
-
-  describe('description prop', () => {
-    const faker = CategoryFakeBuilder.aCategory();
-    test('should be a function', () => {
-      expect(typeof faker['_description']).toBe('function');
-    });
-
-    test('should call the paragraph method', () => {
-      const chance = Chance();
-      const spyParagraphMethod = jest.spyOn(chance, 'paragraph');
-      faker['chance'] = chance;
-      faker.build();
-      expect(spyParagraphMethod).toHaveBeenCalled();
-    });
-
-    test('withDescription', () => {
-      const $this = faker.withDescription('test description');
-      expect($this).toBeInstanceOf(CategoryFakeBuilder);
-      expect(faker['_description']).toBe('test description');
-
-      faker.withDescription(() => 'test description');
-      //@ts-expect-error description is callable
-      expect(faker['_description']()).toBe('test description');
-
-      expect(faker.description).toBe('test description');
-    });
-
-    test('should pass index to description factory', () => {
-      faker.withDescription((index) => `test description ${index}`);
-      const category = faker.build();
-      expect(category.description).toBe(`test description 0`);
-
-      const fakerMany = CategoryFakeBuilder.theCategories(2);
-      fakerMany.withDescription((index) => `test description ${index}`);
-      const categories = fakerMany.build();
-
-      expect(categories[0].description).toBe(`test description 0`);
-      expect(categories[1].description).toBe(`test description 1`);
+          test('then should set categoryId', () => {
+            expect(fakerMany.build()[0].categoryId).toBe(categoryId);
+            expect(fakerMany.build()[1].categoryId).toBe(categoryId);
+          });
+        });
+      });
     });
   });
 
-  describe('isActive prop', () => {
-    const faker = CategoryFakeBuilder.aCategory();
-    test('should be a function', () => {
-      expect(typeof faker['_isActive']).toBe('function');
+  describe('name', () => {
+    describe('given a fake category', () => {
+      let faker: CategoryFakeBuilder;
+      let randomSpy: jest.SpyInstance;
+
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.aCategory();
+
+        const random = new ChanceRandom();
+        randomSpy = jest.spyOn(random, 'chars');
+        faker['random'] = random;
+      });
+
+      describe('given name is not set', () => {
+        describe('when getValue is called', () => {
+          let name: string;
+
+          beforeEach(() => {
+            name = faker.name;
+          });
+
+          test('then should be a string created by Random', () => {
+            expect(typeof name).toBe('string');
+            expect(name.length).toBeGreaterThan(0);
+            expect(randomSpy).toHaveBeenCalledTimes(1);
+          });
+        });
+
+        describe('when _name is called', () => {
+          let name: string;
+
+          beforeEach(() => {
+            name = (faker['_name'] as () => string)();
+          });
+
+          test('then should be a function that return a random number of chars', () => {
+            expect(faker['_name']).toBeInstanceOf(Function);
+          });
+
+          test('then should return a string', () => {
+            expect(typeof name).toBe('string');
+          });
+        });
+      });
+
+      describe('when withName is called with a string', () => {
+        let name: string;
+
+        beforeEach(() => {
+          name = 'name test';
+          faker.withName(name);
+        });
+
+        test('then should set name', () => {
+          expect(faker['_name']).toBe(name);
+          expect(faker.name).toBe(name);
+        });
+      });
+
+      describe('when withName is called with a factory', () => {
+        let name: string;
+
+        beforeEach(() => {
+          name = 'name test';
+          faker.withName(() => name);
+        });
+
+        test('then should set name', () => {
+          expect(faker.name).toBe(name);
+        });
+      });
+
+      describe('when withName is called with a number', () => {
+        beforeEach(() => {
+          faker.withName(123 as any);
+        });
+
+        test('then should not throw error', () => {
+          expect(faker.name).toBe(123);
+        });
+
+        describe('when build is called', () => {
+          test('then should throw Validation Error', () => {
+            expect(() => faker.build()).containsErrorMessages({
+              name: ['name must be a string', 'name must be shorter than or equal to 255 characters'],
+            });
+          });
+        });
+      });
+
+      describe('when withName is called with a string that is too long', () => {
+        beforeEach(() => {
+          faker.withName('a'.repeat(256));
+        });
+
+        test('then should not throw error', () => {
+          expect(faker.name).toBe('a'.repeat(256));
+        });
+
+        describe('when build is called', () => {
+          test('then should throw Validation Error', () => {
+            expect(() => faker.build()).containsErrorMessages({
+              name: ['name must be shorter than or equal to 255 characters'],
+            });
+          });
+        });
+      });
+
+      describe('when withInvalidNameTooLong is called', () => {
+        beforeEach(() => {
+          faker.withInvalidNameTooLong();
+        });
+
+        test('then should not throw error', () => {
+          expect(faker.name.length).toBe(256);
+        });
+
+        describe('when build is called', () => {
+          test('then should throw Validation Error', () => {
+            expect(() => faker.build()).containsErrorMessages({
+              name: ['name must be shorter than or equal to 255 characters'],
+            });
+          });
+        });
+      });
     });
 
-    test('activate', () => {
-      const $this = faker.activate();
-      expect($this).toBeInstanceOf(CategoryFakeBuilder);
-      expect(faker['_isActive']).toBe(true);
-      expect(faker.isActive).toBe(true);
-    });
+    describe('given many fake categories', () => {
+      let faker: CategoryFakeBuilder;
 
-    test('deactivate', () => {
-      const $this = faker.deactivate();
-      expect($this).toBeInstanceOf(CategoryFakeBuilder);
-      expect(faker['_isActive']).toBe(false);
-      expect(faker.isActive).toBe(false);
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.theCategories(2);
+      });
+
+      describe('when withName is called with a factory that receives index', () => {
+        beforeEach(() => {
+          faker.withName((index) => `name test ${index}`);
+        });
+
+        test('then should set name', () => {
+          const categories = faker.build();
+          expect(categories[0].name).toBe('name test 0');
+          expect(categories[1].name).toBe('name test 1');
+        });
+      });
     });
   });
 
-  describe('createdAt prop', () => {
-    const faker = CategoryFakeBuilder.aCategory();
+  describe('description', () => {
+    describe('given a fake category', () => {
+      let faker: CategoryFakeBuilder;
+      let randomSpy: jest.SpyInstance;
 
-    test('should throw error when any with methods has called', () => {
-      const fakerCategory = CategoryFakeBuilder.aCategory();
-      expect(() => fakerCategory.createdAt).toThrowError(
-        new Error("Property createdAt not have a factory, use 'with' methods"),
-      );
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.aCategory();
+
+        const random = new ChanceRandom();
+        randomSpy = jest.spyOn(random, 'paragraphs');
+        faker['random'] = random;
+      });
+
+      describe('given description is not set', () => {
+        describe('when getValue is called', () => {
+          let description: string;
+
+          beforeEach(() => {
+            description = faker.description;
+          });
+
+          test('then should be a string created by Random', () => {
+            expect(typeof description).toBe('string');
+            expect(description.length).toBeGreaterThan(0);
+            expect(randomSpy).toHaveBeenCalledTimes(1);
+          });
+        });
+
+        describe('when _description is called', () => {
+          let description: string;
+
+          beforeEach(() => {
+            description = (faker['_description'] as () => string)();
+          });
+
+          test('then should be a function that return a random number of chars', () => {
+            expect(faker['_description']).toBeInstanceOf(Function);
+          });
+
+          test('then should return a string', () => {
+            expect(typeof description).toBe('string');
+          });
+        });
+      });
+
+      describe('when withDescription is called with a string', () => {
+        let description: string;
+
+        beforeEach(() => {
+          description = 'description test';
+          faker.withDescription(description);
+        });
+
+        test('then should set description', () => {
+          expect(faker['_description']).toBe(description);
+          expect(faker.description).toBe(description);
+        });
+      });
+
+      describe('when withDescription is called with a factory', () => {
+        let description: string;
+
+        beforeEach(() => {
+          description = 'description test';
+          faker.withDescription(() => description);
+        });
+
+        test('then should set description', () => {
+          expect(faker.description).toBe(description);
+        });
+      });
+
+      describe('when withDescription is called with a number', () => {
+        beforeEach(() => {
+          faker.withDescription(123 as any);
+        });
+
+        test('then should not throw error', () => {
+          expect(faker.description).toBe(123);
+        });
+
+        describe('when build is called', () => {
+          test('then should throw Validation Error', () => {
+            expect(() => faker.build()).containsErrorMessages({
+              description: ['description must be a string'],
+            });
+          });
+        });
+      });
+
+      describe('when withDescription is called with a string that is too long', () => {
+        beforeEach(() => {
+          faker.withDescription('a'.repeat(258));
+        });
+
+        test('then should not throw error', () => {
+          expect(faker.description).toBe('a'.repeat(258));
+        });
+
+        describe('when build is called', () => {
+          test('then should throw Validation Error', () => {
+            expect(() => faker.build()).containsErrorMessages({
+              description: ['description mus be shorter than or equal to 255 characters'],
+            });
+          });
+        });
+      });
     });
 
-    test('should be undefined', () => {
-      expect(faker['_createdAt']).toBeUndefined();
-    });
+    describe('given many fake categories', () => {
+      let faker: CategoryFakeBuilder;
 
-    test('withCreatedAt', () => {
-      const date = new Date();
-      const $this = faker.withCreatedAt(date);
-      expect($this).toBeInstanceOf(CategoryFakeBuilder);
-      expect(faker['_createdAt']).toBe(date);
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.theCategories(2);
+      });
 
-      faker.withCreatedAt(() => date);
-      //@ts-expect-error _createdAt is a callable
-      expect(faker['_createdAt']()).toBe(date);
-      expect(faker.createdAt).toBe(date);
-    });
+      describe('when withDescription is called with a factory that receives index', () => {
+        beforeEach(() => {
+          faker.withDescription((index) => `description test ${index}`);
+        });
 
-    test('should pass index to createdAt factory', () => {
-      const date = new Date();
-      faker.withCreatedAt((index) => new Date(date.getTime() + index + 2));
-      const category = faker.build();
-      expect(category.createdAt.getTime()).toBe(date.getTime() + 2);
-
-      const fakerMany = CategoryFakeBuilder.theCategories(2);
-      fakerMany.withCreatedAt((index) => new Date(date.getTime() + index + 2));
-      const categories = fakerMany.build();
-
-      expect(categories[0].createdAt.getTime()).toBe(date.getTime() + 2);
-      expect(categories[1].createdAt.getTime()).toBe(date.getTime() + 3);
+        test('then should set description', () => {
+          const categories = faker.build();
+          expect(categories[0].description).toBe('description test 0');
+          expect(categories[1].description).toBe('description test 1');
+        });
+      });
     });
   });
 
-  test('should create a category', () => {
-    const faker = CategoryFakeBuilder.aCategory();
-    let category = faker.build();
+  describe('isActive', () => {
+    describe('given a fake category', () => {
+      let faker: CategoryFakeBuilder;
 
-    expect(category.categoryId).toBeInstanceOf(Uuid);
-    expect(typeof category.name === 'string').toBeTruthy();
-    expect(typeof category.description === 'string').toBeTruthy();
-    expect(category.isActive).toBe(true);
-    expect(category.createdAt).toBeInstanceOf(Date);
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.aCategory();
+      });
 
-    const createdAt = new Date();
-    const categoryId = new Uuid();
-    category = faker
-      .withCategoryId(categoryId)
-      .withName('name test')
-      .withDescription('description test')
-      .deactivate()
-      .withCreatedAt(createdAt)
-      .build();
+      describe('when getValue is called', () => {
+        test('then should be true', () => {
+          expect(() => faker.isActive).toBeTruthy();
+        });
+      });
 
-    expect(category.categoryId.id).toBe(categoryId.id);
-    expect(category.name).toBe('name test');
-    expect(category.description).toBe('description test');
-    expect(category.isActive).toBe(false);
-    expect(category.createdAt).toBe(createdAt);
+      describe('when accessing _isActive', () => {
+        test('then should be a function', () => {
+          expect(faker['_isActive']).toBeInstanceOf(Function);
+        });
+
+        test('then should return true', () => {
+          expect((faker['_isActive'] as () => boolean)()).toBe(true);
+        });
+      });
+
+      describe('when isActive is not set', () => {
+        test('then getValue should be true', () => {
+          expect(faker.isActive).toBe(true);
+        });
+
+        test('then _isActive should be a function', () => {
+          expect(faker['_isActive']).toBeInstanceOf(Function);
+        });
+      });
+
+      describe('when activate is called', () => {
+        beforeEach(() => {
+          faker.activate();
+        });
+
+        test('then should set isActive to true', () => {
+          expect(faker['_isActive']).toBe(true);
+          expect(faker.isActive).toBe(true);
+        });
+      });
+
+      describe('when deactivate is called', () => {
+        beforeEach(() => {
+          faker.deactivate();
+        });
+
+        test('then should set isActive to false', () => {
+          expect(faker['_isActive']).toBe(false);
+          expect(faker.isActive).toBe(false);
+        });
+      });
+    });
   });
 
-  test('should create many categories', () => {
-    const faker = CategoryFakeBuilder.theCategories(2);
-    let categories = faker.build();
+  describe('createdAt', () => {
+    describe('given a fake category', () => {
+      let faker: CategoryFakeBuilder;
 
-    categories.forEach((category) => {
-      expect(category.categoryId).toBeInstanceOf(Uuid);
-      expect(typeof category.name === 'string').toBeTruthy();
-      expect(typeof category.description === 'string').toBeTruthy();
-      expect(category.isActive).toBe(true);
-      expect(category.createdAt).toBeInstanceOf(Date);
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.aCategory();
+      });
+
+      describe('when getValue is called', () => {
+        test('then should throw error', () => {
+          expect(() => faker.createdAt).toThrowError(
+            new Error("Property createdAt not have a factory, use 'with' methods"),
+          );
+        });
+      });
+
+      describe('when createdAt is not set', () => {
+        test('then should be undefined', () => {
+          expect(faker['_createdAt']).toBeUndefined();
+        });
+      });
+
+      describe('when withCreatedAt is called', () => {
+        let createdAt: Date;
+
+        beforeEach(() => {
+          createdAt = new Date();
+          faker.withCreatedAt(createdAt);
+        });
+
+        test('then should set createdAt', () => {
+          expect(faker['_createdAt']).toBe(createdAt);
+          expect(faker.createdAt).toBe(createdAt);
+        });
+
+        describe('and withCreatedAt is called with a factory', () => {
+          beforeEach(() => {
+            faker.withCreatedAt(() => createdAt);
+          });
+
+          test('then should set createdAt', () => {
+            expect((faker['_createdAt'] as () => any)()).toBe(createdAt);
+          });
+        });
+      });
+
+      describe('and a factory is set to return a fixed date', () => {
+        let createdAt: Date;
+        let mockFactory: jest.Mock;
+
+        beforeEach(() => {
+          createdAt = new Date();
+          mockFactory = jest.fn(() => createdAt);
+        });
+
+        describe('when withCreatedAt is called', () => {
+          beforeEach(() => {
+            faker.withCreatedAt(mockFactory);
+          });
+
+          describe('when build is called', () => {
+            beforeEach(() => {
+              faker.build();
+            });
+
+            test('then should call the factory', () => {
+              expect(mockFactory).toHaveBeenCalledTimes(1);
+            });
+          });
+        });
+      });
+
+      describe('and many categories are set to use a fixed date', () => {
+        let fakerMany: CategoryFakeBuilder;
+
+        beforeEach(() => {
+          fakerMany = CategoryFakeBuilder.theCategories(2);
+        });
+
+        describe('when withCreatedAt is called', () => {
+          let createdAt: Date;
+
+          beforeEach(() => {
+            createdAt = new Date();
+            fakerMany.withCreatedAt(() => createdAt);
+          });
+
+          test('then should set createdAt', () => {
+            expect(fakerMany.build()[0].createdAt).toBe(createdAt);
+            expect(fakerMany.build()[1].createdAt).toBe(createdAt);
+          });
+
+          describe('and withCreatedAt is called with a factory that receives index', () => {
+            beforeEach(() => {
+              fakerMany.withCreatedAt((index) => new Date(createdAt.getTime() + index + 2));
+            });
+
+            test('then should set createdAt', () => {
+              const categories = fakerMany.build();
+              expect(categories[0].createdAt.getTime()).toBe(createdAt.getTime() + 2);
+              expect(categories[1].createdAt.getTime()).toBe(createdAt.getTime() + 3);
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('build', () => {
+    describe('given a fake category', () => {
+      let faker: CategoryFakeBuilder;
+
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.aCategory();
+      });
+
+      describe('when build is called', () => {
+        let category: any;
+
+        beforeEach(() => {
+          category = faker.build();
+        });
+
+        test('then should return a category', () => {
+          expect(category).toHaveProperty('categoryId');
+          expect(category).toHaveProperty('name');
+          expect(category).toHaveProperty('description');
+          expect(category).toHaveProperty('isActive');
+          expect(category).toHaveProperty('createdAt');
+
+          expect(category.categoryId).toBeInstanceOf(Uuid);
+          expect(typeof category.name === 'string').toBeTruthy();
+          expect(typeof category.description === 'string').toBeTruthy();
+          expect(category.isActive).toBe(true);
+          expect(category.createdAt).toBeInstanceOf(Date);
+        });
+      });
+
+      describe('given some values', () => {
+        let category: any;
+
+        beforeEach(() => {
+          category = faker
+            .withName('name test')
+            .withDescription('description test')
+            .deactivate()
+            .withCreatedAt(new Date())
+            .build();
+        });
+
+        test('then should return a category with the values', () => {
+          expect(category.name).toBe('name test');
+          expect(category.description).toBe('description test');
+          expect(category.isActive).toBe(false);
+        });
+      });
     });
 
-    const createdAt = new Date();
-    const categoryId = new Uuid();
-    categories = faker
-      .withCategoryId(categoryId)
-      .withName('name test')
-      .withDescription('description test')
-      .deactivate()
-      .withCreatedAt(createdAt)
-      .build();
+    describe('given many fake categories', () => {
+      let faker: CategoryFakeBuilder;
 
-    categories.forEach((category) => {
-      expect(category.categoryId.id).toBe(categoryId.id);
-      expect(category.name).toBe('name test');
-      expect(category.description).toBe('description test');
-      expect(category.isActive).toBe(false);
-      expect(category.createdAt).toBe(createdAt);
+      beforeEach(() => {
+        faker = CategoryFakeBuilder.theCategories(2);
+      });
+
+      describe('when build is called', () => {
+        let categories: any[];
+
+        beforeEach(() => {
+          categories = faker.build();
+        });
+
+        test('then should return a list of categories', () => {
+          expect(categories.length).toBe(2);
+          categories.forEach((category) => {
+            expect(category).toHaveProperty('categoryId');
+            expect(category).toHaveProperty('name');
+            expect(category).toHaveProperty('description');
+            expect(category).toHaveProperty('isActive');
+            expect(category).toHaveProperty('createdAt');
+
+            expect(category.categoryId).toBeInstanceOf(Uuid);
+            expect(typeof category.name === 'string').toBeTruthy();
+            expect(typeof category.description === 'string').toBeTruthy();
+            expect(category.isActive).toBe(true);
+            expect(category.createdAt).toBeInstanceOf(Date);
+          });
+        });
+      });
+
+      describe('given some values', () => {
+        let categories: any[];
+
+        beforeEach(() => {
+          categories = faker
+            .withName('name test')
+            .withDescription('description test')
+            .deactivate()
+            .withCreatedAt(new Date())
+            .build();
+        });
+
+        test('then should return a list of categories with the values', () => {
+          categories.forEach((category) => {
+            expect(category.name).toBe('name test');
+            expect(category.description).toBe('description test');
+            expect(category.isActive).toBe(false);
+          });
+        });
+      });
     });
   });
 });

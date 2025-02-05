@@ -1,19 +1,15 @@
-import { Chance } from 'chance';
+import { ChanceRandom } from 'src/shared/domain/utils/chance.random';
+import { Random } from 'src/shared/domain/utils/random.interface';
 import { Uuid } from 'src/shared/domain/value-objects/uuid.vo';
 import { Category } from './category.entity';
 
 type PropOrFactory<T> = T | ((index: number) => T);
 
 export class CategoryFakeBuilder<TBuild = any> {
-  // auto generated in entity
   private _categoryId: PropOrFactory<Uuid> | undefined = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private _name: PropOrFactory<string> = (_index) => this.chance.word();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private _description: PropOrFactory<string | null> = (_index) => this.chance.paragraph();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _name: PropOrFactory<string> = (_index) => this.random.chars();
+  private _description: PropOrFactory<string | null> = (_index) => this.random.paragraphs();
   private _isActive: PropOrFactory<boolean> = (_index) => true;
-  // auto generated in entity
   private _createdAt: PropOrFactory<Date> | undefined = undefined;
 
   private countObjs: number;
@@ -26,11 +22,11 @@ export class CategoryFakeBuilder<TBuild = any> {
     return new CategoryFakeBuilder<Category[]>(countObjs);
   }
 
-  private chance: Chance.Chance;
+  private random: Random;
 
   private constructor(countObjs: number = 1) {
     this.countObjs = countObjs;
-    this.chance = Chance();
+    this.random = new ChanceRandom();
   }
 
   withCategoryId(valueOrFactory: PropOrFactory<Uuid>) {
@@ -64,7 +60,7 @@ export class CategoryFakeBuilder<TBuild = any> {
   }
 
   withInvalidNameTooLong(value?: string) {
-    this._name = value ?? this.chance.word({ length: 256 });
+    this._name = value ?? this.random.chars(256);
     return this;
   }
 
